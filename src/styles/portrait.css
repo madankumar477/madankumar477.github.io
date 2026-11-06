@@ -1,0 +1,305 @@
+/* ================= ROBOTIC PORTRAIT =================
+ * The HUD fades as a whole on the <svg> element; inner parts use keyframe
+ * entry animations (restarted whenever the mode class changes) rather than
+ * transitions on SVG children, which keeps rendering reliable everywhere.
+ */
+.robo {
+  position: relative;
+  z-index: 1;
+  --hud: #ff3b47;
+  --hud-text: #ff8a92;
+  --hud-ice: #fff1f2;
+}
+.robo-frame {
+  position: relative;
+  aspect-ratio: 697 / 914;
+  width: 100%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  --tx: 0;
+  --ty: 0;
+}
+.robo-frame:focus-visible {
+  outline: 2px solid var(--red-2);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+.robo-photo {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent 99%);
+  mask-image: linear-gradient(180deg, #000 70%, transparent 99%);
+  transform: translate3d(calc(var(--tx) * -6px), calc(var(--ty) * -4px), 0);
+  transition: filter 0.6s var(--ease), transform 0.8s var(--ease);
+}
+.robo:not([data-mode='idle']) .robo-photo {
+  filter: contrast(1.08) saturate(0.9) brightness(0.9);
+}
+
+/* faint scanline texture over the face */
+.robo-texture {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(255, 60, 70, 0.09) 0 1px, transparent 1px 4px);
+  -webkit-mask-image: radial-gradient(34% 30% at 49% 39%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(34% 30% at 49% 39%, #000 40%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+.robo[data-mode='lock'] .robo-texture {
+  opacity: 1;
+}
+
+.robo-hud {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  opacity: 0;
+  transform: translate3d(calc(var(--tx) * 5px), calc(var(--ty) * 4px), 0);
+  transition: opacity 0.4s var(--ease), transform 0.5s var(--ease);
+}
+.robo:not([data-mode='idle']) .robo-hud {
+  opacity: 1;
+}
+.robo-hud line,
+.robo-hud path,
+.robo-hud circle,
+.robo-hud rect {
+  vector-effect: non-scaling-stroke;
+}
+.robo-small {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  fill: var(--hud-text);
+  font-weight: 700;
+}
+.robo-big {
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  fill: var(--hud-ice);
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(10, 4, 6, 0.6);
+  stroke-width: 3px;
+}
+
+/* ---------- visibility per mode (no transitions on SVG children) ---------- */
+.robo-clip,
+.robo-mesh,
+.robo-eye,
+.robo-callouts,
+.robo-bars,
+.robo-reticle,
+.robo-brackets {
+  display: none;
+}
+.robo[data-show='search'] .robo-brackets,
+.robo[data-show='search'] .robo-reticle,
+.robo[data-show='lock'] .robo-clip,
+.robo[data-show='lock'] .robo-mesh,
+.robo[data-show='lock'] .robo-eye,
+.robo[data-show='lock'] .robo-callouts,
+.robo[data-show='lock'] .robo-bars,
+.robo[data-show='lock'] .robo-reticle,
+.robo[data-show='lock'] .robo-brackets {
+  display: inline;
+}
+
+@keyframes robo-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes robo-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes robo-pop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+@keyframes robo-lock-in {
+  from { transform: scale(1.22); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes robo-search {
+  0%, 100% { transform: scale(1.14); }
+  50% { transform: scale(1.1); }
+}
+
+/* contour bands + sweep */
+.robo-contours path {
+  fill: none;
+  stroke: var(--hud);
+  stroke-width: 1;
+  opacity: 0.5;
+  stroke-dasharray: 1;
+  animation: robo-draw 0.9s var(--ease) both;
+}
+.robo-clip {
+  animation: robo-fade 0.5s var(--ease) both;
+}
+.robo-sweep {
+  animation: robo-sweep 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes robo-sweep {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(490px); }
+}
+
+/* mesh */
+.robo-mesh line {
+  stroke: var(--hud-ice);
+  stroke-width: 1;
+  opacity: 0.5;
+  stroke-dasharray: 1;
+  animation: robo-draw 0.6s var(--ease) both;
+  animation-delay: calc(var(--i) * 12ms);
+}
+.robo-mesh circle {
+  fill: var(--hud);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: robo-pop 0.4s var(--ease) both;
+  animation-delay: calc(150ms + var(--i) * 18ms);
+}
+
+/* brackets */
+.robo-brackets path {
+  fill: none;
+  stroke: var(--hud);
+  stroke-width: 3;
+  stroke-linecap: square;
+}
+.robo-brackets {
+  transform-origin: 341px 352px;
+}
+.robo[data-show='lock'] .robo-brackets {
+  animation: robo-lock-in 0.55s var(--ease) both;
+}
+.robo[data-show='search'] .robo-brackets {
+  opacity: 0.7;
+  animation: robo-search 1.6s ease-in-out infinite;
+}
+.robo-lock-tag {
+  fill: var(--hud);
+}
+.robo-lock-text {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  fill: #fff;
+}
+
+/* eyes */
+.robo-eye {
+  animation: robo-fade 0.4s var(--ease) 0.25s both;
+}
+.robo-eye path {
+  stroke: var(--hud);
+  stroke-width: 1.5;
+}
+.robo-eye-ring {
+  fill: none;
+  stroke: var(--hud-ice);
+  stroke-width: 1.2;
+}
+.robo-eye-dash {
+  fill: none;
+  stroke: var(--hud);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 8;
+  animation: spin 7s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.robo-eye-core {
+  fill: var(--hud);
+  animation: robo-blink 1.4s ease-in-out infinite;
+}
+@keyframes robo-blink {
+  50% { opacity: 0.25; }
+}
+
+/* callouts */
+.robo-call path {
+  fill: none;
+  stroke: var(--hud-text);
+  stroke-width: 1.2;
+  stroke-dasharray: 1;
+  animation: robo-draw 0.7s var(--ease) both;
+  animation-delay: calc(200ms + var(--i) * 120ms);
+}
+.robo-call text {
+  animation: robo-fade 0.4s var(--ease) both;
+  animation-delay: calc(350ms + var(--i) * 120ms);
+}
+
+/* telemetry bars */
+.robo-bars rect {
+  fill: var(--hud);
+  opacity: 0.8;
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: robo-bar 0.9s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * -170ms);
+}
+@keyframes robo-bar {
+  from { transform: scaleY(0.2); }
+  to { transform: scaleY(1); }
+}
+
+/* reticle */
+.robo-reticle circle,
+.robo-reticle path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.4;
+}
+
+/* hint chip */
+.robo-hint {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 7%;
+  translate: -50% 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(10, 10, 13, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #d6d6dc;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+.robo:not([data-mode='idle']) .robo-hint {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.robo-hint-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red-2);
+  box-shadow: 0 0 10px var(--red-2);
+  animation: robo-blink 1.4s ease-in-out infinite;
+}

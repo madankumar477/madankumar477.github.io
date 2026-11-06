@@ -1,0 +1,11 @@
+{
+  "name": "E Madan Kumar — Robotics & AI Engineer",
+  "short_name": "Madan",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "background_color": "#0a0a0d",
+  "theme_color": "#0a0a0d",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
